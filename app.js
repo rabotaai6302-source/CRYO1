@@ -1,7 +1,6 @@
-/* BUILD_ID: CRYOTEST_APP_JS_2026-03-16_UI_STAGE_B_FIX_03 */
+/* BUILD_ID: CRYOTEST_APP_JS_STATIC_2026-03-17_FIX02 */
 
-const API_SCENE = "/api/scene";
-const API_CHOOSE = "/api/choose";
+const SCENES_URL = "./CRYOTEST/backend/scenes.json";
 
 // ===== DOM (UI stage layout) =====
 const sceneTextWrap = document.getElementById("sceneTextWrap");
@@ -29,9 +28,206 @@ const soundBtnFallback = document.getElementById("soundBtnFallback");
 const overlayEl = document.getElementById("overlay");
 const buildEl = document.getElementById("buildId");
 
-if (buildEl) buildEl.textContent = "BUILD_ID: CRYOTEST_APP_JS_2026-03-16_UI_STAGE_B_FIX_03";
+if (buildEl) buildEl.textContent = "BUILD_ID: CRYOTEST_APP_JS_STATIC_2026-03-17_FIX02";
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+
+class SceneStore {
+  constructor(data) {
+    this.data = data;
+    this.rules = data.rules || {};
+    this.entry = data.entry;
+    this.scenesById = new Map((data.scenes || []).map((s) => [s.id, s]));
+  }
+
+  get(sceneId) {
+    const scene = this.scenesById.get(sceneId);
+    if (!scene) throw new Error(`Scene not found: ${sceneId}`);
+    return scene;
+  }
+
+  dominanceCheck(stats) {
+    const dom = this.rules.dominance || {};
+    const threshold = Number(dom.threshold ?? 6);
+    const leadBy = Number(dom.leadBy ?? 2);
+    const sortedStats = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+    const [topName, topVal] = sortedStats[0];
+    const secondVal = sortedStats[1] ? sortedStats[1][1] : -1e9;
+    return topVal >= threshold && (topVal - secondVal) >= leadBy ? [true, topName] : [false, null];
+  }
+
+  maxCycles() {
+    return Number(this.rules.maxCycles ?? 5);
+  }
+
+  pickCycleEntry(cycle) {
+    if (cycle === 1 && this.entry) return this.entry;
+    if (cycle === 2 && this.scenesById.has("c2_capsule_wake_v2")) return "c2_capsule_wake_v2";
+    return this.entry || "c1_capsule_wake";
+  }
+
+  maybeInjectAnomaly(cycle) {
+    if (cycle <= 1 || cycle >= 5) return null;
+    const chance = { 2: 0.08, 3: 0.12, 4: 0.10 }[cycle] || 0;
+    if (Math.random() > chance) return null;
+    const anomalies = [...this.scenesById.values()].filter((s) => s.type === "anomaly");
+    return anomalies.length ? anomalies[Math.floor(Math.random() * anomalies.length)].id : null;
+  }
+}
+
+class Engine {
+  constructor(store) {
+    this.store = store;
+    this.reset(true);
+  }
+
+  reset(full = true) {
+    if (full || !this.state) {
+      this.state = {
+        cycle: 1,
+        stats: { fear: 0, control: 0, logic: 0, trust: 0 },
+        current_scene_id: "",
+        ended: false,
+        last_scene_id: null,
+      };
+    }
+    this.state.ended = false;
+    this.state.last_scene_id = null;
+    this.state.current_scene_id = this.store.pickCycleEntry(this.state.cycle);
+  }
+
+  roleFromDom(dom) {
+    return {
+      fear: "Sentinel / Threat Monitor",
+      control: "Protocol Officer",
+      logic: "Systems Analyst",
+      trust: "Crew Liaison",
+    }[dom] || "Undeclared";
+  }
+
+  applyDelta(delta = {}) {
+    Object.entries(delta).forEach(([k, v]) => {
+      if (Object.prototype.hasOwnProperty.call(this.state.stats, k)) this.state.stats[k] += Number(v);
+    });
+  }
+
+  endCycle() {
+    const [done, dom] = this.store.dominanceCheck(this.state.stats);
+    if (done) {
+      this.state.ended = true;
+      this.state.current_scene_id = `system_final_${dom}`;
+      return;
+    }
+    this.state.cycle += 1;
+    if (this.state.cycle > this.store.maxCycles()) {
+      const domMax = Object.entries(this.state.stats).sort((a, b) => b[1] - a[1])[0][0];
+      this.state.ended = true;
+      this.state.current_scene_id = `system_final_${domMax}`;
+      return;
+    }
+    this.state.current_scene_id = this.store.pickCycleEntry(this.state.cycle);
+  }
+
+  getRenderScene() {
+    const sid = this.state.current_scene_id;
+
+    if (sid.startsWith("system_final_")) {
+      const dom = sid.replace("system_final_", "");
+      return {
+        id: sid,
+        cycle: this.state.cycle,
+        text: `ТЕСТ ЗАВЕРШЁН.\nОбъект: Клон №47.\nНазначение: ${this.roleFromDom(dom)}`,
+        effects: ["sterile_silence", "light_white"],
+        choices: [{ text: "Завершить", next: "system_restart", delta: {} }],
+        meta: { ended: true, dominant: dom, stats: { ...this.state.stats } }
+      };
+    }
+
+    if (sid === "system_restart") {
+      return {
+        id: "system_restart",
+        cycle: this.state.cycle,
+        text: "Следующий.",
+        effects: ["flash_subtle"],
+        choices: [{ text: "Начать заново", next: "system_reset_full", delta: {} }],
+        meta: { ended: true, stats: { ...this.state.stats } }
+      };
+    }
+
+    if (sid === "system_reset_full") {
+      this.reset(true);
+      return this.getRenderScene();
+    }
+
+    const scene = { ...this.store.get(sid) };
+    scene.meta = {
+      ...(scene.meta || {}),
+      cycle: this.state.cycle,
+      stats: { ...this.state.stats },
+      ended: this.state.ended
+    };
+    return scene;
+  }
+
+  choose(choiceIndex) {
+    const sid = this.state.current_scene_id;
+
+    if (sid.startsWith("system_final_")) {
+      this.state.current_scene_id = "system_restart";
+      return this.getRenderScene();
+    }
+
+    if (sid === "system_restart") {
+      this.state.current_scene_id = "system_reset_full";
+      return this.getRenderScene();
+    }
+
+    const scene = this.store.get(sid);
+    const choices = scene.choices || [];
+
+    if (!choices.length) {
+      this.endCycle();
+      return this.getRenderScene();
+    }
+
+    if (choiceIndex < 0 || choiceIndex >= choices.length) {
+      throw new Error("Invalid choice index");
+    }
+
+    const choice = choices[choiceIndex];
+    this.applyDelta(choice.delta || {});
+    this.state.last_scene_id = sid;
+
+    if (choice.next === "system_cycle_end") {
+      const anomaly = this.store.maybeInjectAnomaly(this.state.cycle);
+      if (anomaly) {
+        this.state.current_scene_id = anomaly;
+        return this.getRenderScene();
+      }
+
+      this.endCycle();
+      return this.getRenderScene();
+    }
+
+    if (!choice.next) {
+      this.endCycle();
+      return this.getRenderScene();
+    }
+
+    this.state.current_scene_id = choice.next;
+    return this.getRenderScene();
+  }
+}
+
+let engine = null;
+
+async function initEngine() {
+  if (engine) return;
+  const r = await fetch(SCENES_URL, { cache: "no-store" });
+  if (!r.ok) throw new Error(`Failed to load scenes: ${r.status}`);
+  const data = await r.json();
+  engine = new Engine(new SceneStore(data));
+}
 
 function safeShow(el, display="block"){
   if(!el) return;
@@ -341,18 +537,14 @@ function bindSoundButton(btn){
 bindSoundButton(soundBtn);
 bindSoundButton(soundBtnFallback);
 
-// ===== API =====
+// ===== ENGINE IO =====
 async function fetchScene(){
-  const r = await fetch(API_SCENE, { cache: "no-store" });
-  return r.json();
+  await initEngine();
+  return engine.getRenderScene();
 }
 async function choose(index){
-  const r = await fetch(API_CHOOSE,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({index})
-  });
-  return r.json();
+  await initEngine();
+  return engine.choose(index);
 }
 
 // ===== UI helpers =====

@@ -134,9 +134,6 @@
       // холодный fade
       flashCold(180);
 
-      // сброс
-      try { await fetch("/api/reset", { method: "POST" }); } catch(e){}
-
       setTimeout(() => {
         window.location.href = "./game.html";
       }, 220);
