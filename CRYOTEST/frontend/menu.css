@@ -1,0 +1,399 @@
+:root{
+  --bg:#05070a;
+  --fg: rgba(232,238,246,.92);
+  --muted: rgba(232,238,246,.70);
+
+  --hud: rgba(120,180,255,.22);
+  --hudStrong: rgba(120,180,255,.55);
+  --glow: rgba(120,180,255,.18);
+
+  --cut: 10px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: var(--bg);
+  color: var(--fg);
+  overflow:hidden;
+}
+
+/* ===== BACKGROUND ===== */
+.bg{
+  position:fixed;
+  inset:0;
+  background: var(--bg);
+}
+
+.bg::before{
+  content:"";
+  position:absolute;
+  inset:-18px;
+  background-image: url("./assets/menu_bg.png");
+  background-size: cover;
+  background-position: center;
+
+  /* Чуть светлее */
+  filter: contrast(1.08) brightness(0.90) saturate(1.05);
+
+  opacity: .98;
+
+  transform: translate3d(0,0,0) scale(1.045);
+  will-change: transform;
+  animation: bgFloat 16s ease-in-out infinite;
+}
+
+@keyframes bgFloat{
+  0%   { transform: translate3d(-10px, -6px, 0) scale(1.045); }
+  35%  { transform: translate3d(  6px, -10px, 0) scale(1.060); }
+  70%  { transform: translate3d( 12px,  4px, 0) scale(1.055); }
+  100% { transform: translate3d(-10px, -6px, 0) scale(1.045); }
+}
+
+.bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(1100px 800px at 50% 35%, rgba(120,180,255,.16), transparent 62%),
+    linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.78));
+}
+
+.pulse{
+  position:fixed;
+  inset:-10%;
+  pointer-events:none;
+  background:
+    radial-gradient(900px 700px at 52% 38%, rgba(120,180,255,.20), transparent 62%),
+    radial-gradient(700px 550px at 62% 28%, rgba(200,235,255,.08), transparent 55%);
+  mix-blend-mode: screen;
+  opacity: .12;
+  animation: coldPulse 6.8s ease-in-out infinite;
+  filter: blur(2px);
+}
+
+@keyframes coldPulse{
+  0%   { opacity: .09; transform: translateY(0px) scale(1.00); }
+  50%  { opacity: .18; transform: translateY(-6px) scale(1.01); }
+  100% { opacity: .09; transform: translateY(0px) scale(1.00); }
+}
+
+.grain{
+  position:fixed; inset:0; pointer-events:none;
+  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.02), rgba(255,255,255,.02) 1px, transparent 1px, transparent 2px);
+  opacity:.07; mix-blend-mode: overlay;
+  animation: drift 10s linear infinite;
+}
+@keyframes drift{ from{transform:translateY(0)} to{transform:translateY(24px)} }
+
+.vignette{
+  position:fixed; inset:0; pointer-events:none;
+  box-shadow: inset 0 0 220px rgba(0,0,0,.86);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .bg::before, .pulse, .grain { animation: none !important; }
+}
+
+/* ===== UI LAYOUT ===== */
+.wrap{
+  position:relative;
+  height:100vh;
+  padding: 18px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+
+.hud{
+  width: min(560px, 100%);
+  margin-bottom: 18px;
+
+  /* Карман снизу под тумблер */
+  padding: 14px 14px 56px;
+
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.36));
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.05),
+    0 22px 80px rgba(0,0,0,.45);
+  position:relative;
+  overflow:hidden;
+}
+
+.hud::before{
+  content:"";
+  position:absolute;
+  left:10px; right:10px; top:10px;
+  height:1px;
+  background: linear-gradient(90deg, transparent, rgba(120,180,255,.35), transparent);
+  opacity:.9;
+}
+
+.hud::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(0deg, rgba(255,255,255,.03), transparent 26%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.018), rgba(255,255,255,.018) 1px, transparent 1px, transparent 22px);
+  opacity:.08;
+  mix-blend-mode: overlay;
+}
+
+.title{
+  letter-spacing:.28em;
+  font-size: 12px;
+  opacity: .86;
+  text-align:center;
+  user-select:none;
+  margin-bottom: 6px;
+}
+
+.subtitle{
+  font-size: 11px;
+  text-align:center;
+  color: var(--muted);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  opacity: .90;
+  margin-bottom: 10px;
+}
+
+.statusrow{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  color: rgba(232,238,246,.62);
+  margin: 0 2px 10px;
+  user-select:none;
+}
+
+.buttons{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+/* ===== SCI-FI BUTTONS ===== */
+.btn{
+  cursor:pointer;
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--hud);
+
+  background:
+    radial-gradient(900px 120px at 50% 0%, rgba(120,180,255,.11), transparent 58%),
+    rgba(0,0,0,.30);
+
+  color: var(--fg);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-align:center;
+
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.05),
+    0 14px 44px rgba(0,0,0,.35);
+
+  transition:
+    transform .08s ease,
+    border-color .12s ease,
+    background .12s ease,
+    box-shadow .12s ease;
+
+  position:relative;
+  overflow:hidden;
+
+  clip-path: polygon(
+    var(--cut) 0%,
+    calc(100% - var(--cut)) 0%,
+    100% var(--cut),
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    var(--cut) 100%,
+    0% calc(100% - var(--cut)),
+    0% var(--cut)
+  );
+}
+
+.btn::after{
+  content:"";
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width: 3px;
+  background: rgba(120,180,255,.24);
+  opacity:.85;
+}
+
+.btn::before{
+  content:"";
+  position:absolute;
+  inset:-40% -40%;
+  background: linear-gradient(90deg, transparent, rgba(120,180,255,.20), transparent);
+  transform: translateX(-120%);
+  opacity: 0;
+}
+
+.btn:hover{
+  border-color: var(--hudStrong);
+  background:
+    radial-gradient(900px 120px at 50% 0%, rgba(120,180,255,.20), transparent 60%),
+    rgba(10,18,30,.36);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.07),
+    0 0 38px rgba(120,180,255,.11),
+    0 14px 44px rgba(0,0,0,.35);
+}
+
+.btn:hover::after{ background: rgba(120,180,255,.42); }
+
+.btn:hover::before{
+  opacity: .95;
+  animation: scan 0.55s ease-out 1;
+}
+
+@keyframes scan{
+  from { transform: translateX(-120%); }
+  to   { transform: translateX(120%); }
+}
+
+.btn:active{ transform: translateY(1px); }
+
+.btn.secondary{ opacity: .92; }
+
+.btn:disabled{
+  opacity: .45;
+  cursor:not-allowed;
+}
+
+/* footer: фиксируем v0.1 справа НАВСЕГДА */
+.footer{
+  margin-top: 10px;
+  display:grid;
+  grid-template-columns: 1fr auto;
+  align-items:end;
+  gap: 10px;
+
+  /* место под тумблер справа */
+  padding-right: 170px;
+
+  font-size: 12px;
+  color: var(--muted);
+  user-select:none;
+}
+
+/* ===== Hint attention + blink ===== */
+.hint{
+  max-width: 420px;
+  transition: opacity .18s ease;
+}
+
+.hintAttention{
+  color: rgba(232,238,246,.82);
+  text-shadow: 0 0 18px rgba(120,180,255,.18);
+  letter-spacing: .02em;
+}
+
+.hintBlink{
+  animation: hintBlink 1.2s ease-in-out 1;
+}
+
+@keyframes hintBlink{
+  0%   { opacity: .45; }
+  45%  { opacity: 1; }
+  100% { opacity: .78; }
+}
+
+/* ВАЖНО: скрываем без display:none → layout не прыгает */
+.hintOff{
+  opacity: 0;
+  pointer-events:none;
+}
+
+/* ===== Sound toggle (bottom-right) ===== */
+.soundToggle{
+  position:absolute;
+  right: 14px;
+  bottom: 14px;
+
+  display:flex;
+  align-items:center;
+  gap: 10px;
+
+  min-width: 150px;
+  height: 36px;
+  justify-content: center;
+  white-space: nowrap;
+
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(120,180,255,.28);
+  background: rgba(0,0,0,.26);
+  color: rgba(232,238,246,.88);
+
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+
+  cursor:pointer;
+  transition: opacity .14s ease, border-color .14s ease, box-shadow .14s ease, transform .08s ease;
+}
+
+.soundToggle:hover{
+  border-color: rgba(120,180,255,.50);
+  box-shadow: 0 0 18px rgba(120,180,255,.10);
+}
+
+.soundToggle:active{ transform: translateY(1px); }
+
+.soundToggle.dim{
+  opacity: .45;
+  border-color: rgba(255,255,255,.10);
+  box-shadow: none;
+}
+
+.soundToggle .dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(232,238,246,.18);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.10);
+}
+
+.soundToggle.on .dot{
+  background: rgba(120,180,255,.85);
+  box-shadow:
+    0 0 0 1px rgba(120,180,255,.45),
+    0 0 18px rgba(120,180,255,.22);
+}
+
+/* flash */
+.overlayFlash{
+  position:fixed; inset:0;
+  background:#000;
+  opacity:0;
+  pointer-events:none;
+  transition: opacity 120ms linear;
+}
+
+/* v0.1 как системная метка (фикс справа, как STATE: READY) */
+.version{
+  position: absolute;
+  right: 14px;   /* как у правого края в HUD */
+  bottom: 52px;  /* чуть выше тумблера */
+  opacity: .55;
+  white-space: nowrap;
+  text-align: right;
+  pointer-events:none;
+}

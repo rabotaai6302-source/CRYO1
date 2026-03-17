@@ -1,0 +1,447 @@
+{
+  "project": "CRYOTEST",
+  "version": "0.2",
+  "stats": [
+    "fear",
+    "control",
+    "logic",
+    "trust"
+  ],
+  "rules": {
+    "maxCycles": 5,
+    "dominance": {
+      "threshold": 6,
+      "leadBy": 2
+    }
+  },
+  "entry": "c1_capsule_glass",
+  "scenes": [
+    {
+      "id": "c1_capsule_glass",
+      "cycle": 1,
+      "image": "c1_capsule_glass.png",
+      "text": "Пробуждение приходит слишком рано.\nЗа стеклом — пустой коридор.",
+      "effects": [
+        "light_dim"
+      ],
+      "audio": {
+        "sceneOnce": "scene_cryo_breath.mp3",
+        "sceneLoop": "scene_cryo.mp3"
+      },
+      "choices": [
+        {
+          "text": "⏻ ОТКРЫТЬ",
+          "delta": {
+            "control": 1
+          },
+          "next": "c1_corridor_entry_open"
+        },
+        {
+          "text": "⌁ ПАНЕЛЬ",
+          "delta": {
+            "logic": 1,
+            "trust": 1
+          },
+          "next": "c1_panel_boot"
+        }
+      ]
+    },
+    {
+      "id": "c1_panel_boot",
+      "cycle": 1,
+      "image": "c1_panel_boot.png",
+      "text": "Тусклый экран медленно приходит в себя.\nСистема ещё не проснулась полностью.",
+      "effects": [
+        "glitch_minor"
+      ],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_panel_hum.mp3"
+      },
+      "choices": [
+        {
+          "text": "⏻ ВЫЙТИ",
+          "delta": {
+            "control": 1
+          },
+          "next": "c1_corridor_entry_panel"
+        },
+        {
+          "text": "◉ АКТИВИРОВАТЬ",
+          "delta": {
+            "logic": 1,
+            "trust": 1
+          },
+          "next": "c1_panel_data"
+        }
+      ]
+    },
+    {
+      "id": "c1_panel_data",
+      "cycle": 1,
+      "image": "c1_panel_data.png",
+      "text": "Загрузка завершена.\nНа экране появляется твой номер.\n\nКОРАБЛЬ: AURIGA-8\nКАПСУЛА 47\nСТАТУС: ПРОБУЖДЕНИЕ\nПАМЯТЬ: ОШИБКА",
+      "effects": [],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_panel_hum.mp3"
+      },
+      "choices": [
+        {
+          "text": "⏻ ВЫЙТИ",
+          "delta": {},
+          "next": "c1_corridor_entry_panel"
+        }
+      ]
+    },
+    {
+      "id": "c1_corridor_entry_open",
+      "cycle": 1,
+      "image": "c1_corridor_capsules_door.png",
+      "text": "Гул вентиляции заполняет пространство.\nСлева — ряды капсул. Впереди — дверь.",
+      "effects": [],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_corridor_amb.mp3"
+      },
+      "choices": [
+        {
+          "text": "🔍 КАПСУЛЫ",
+          "delta": {
+            "logic": 1,
+            "trust": -1
+          },
+          "next": "c1_capsule_46_fog"
+        },
+        {
+          "text": "🚪 ДВЕРЬ",
+          "delta": {
+            "fear": 1,
+            "control": 1
+          },
+          "next": "c1_door_placeholder_1"
+        }
+      ]
+    },
+    {
+      "id": "c1_corridor_entry_panel",
+      "cycle": 1,
+      "image": "c1_corridor_capsules_door.png",
+      "text": "Система молчит. Слышно только вентиляцию.\nСлева — ряды капсул. Впереди — дверь.",
+      "effects": [],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_corridor_amb.mp3"
+      },
+      "choices": [
+        {
+          "text": "🔍 КАПСУЛЫ",
+          "delta": {
+            "logic": 1,
+            "trust": -1
+          },
+          "next": "c1_capsule_46_fog"
+        },
+        {
+          "text": "🚪 ДВЕРЬ",
+          "delta": {
+            "fear": 1,
+            "control": 1
+          },
+          "next": "c1_door_placeholder_1"
+        }
+      ]
+    },
+    {
+      "id": "c1_capsule_46_fog",
+      "cycle": 1,
+      "image": "c1_capsule_46_fog.png",
+      "text": "Под мутным стеклом угадывается фигура.\nДисплей показывает: капсула 46, цикл 1.",
+      "effects": [],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_corridor_amb.mp3"
+      },
+      "choices": [
+        {
+          "text": "◐ ПРОТЕРЕТЬ",
+          "delta": {
+            "logic": 1,
+            "fear": -1
+          },
+          "next": "c1_capsule_46_clear"
+        },
+        {
+          "text": "🚪 ДВЕРЬ",
+          "delta": {
+            "fear": 1,
+            "trust": 1
+          },
+          "next": "c1_door_placeholder_1"
+        }
+      ]
+    },
+    {
+      "id": "c1_capsule_46_clear",
+      "cycle": 1,
+      "image": "c1_capsule_46_clear.png",
+      "text": "Стекло больше не скрывает лицо.\nВнутри капсулы человек с имплантом.",
+      "effects": [],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_corridor_amb.mp3"
+      },
+      "choices": [
+        {
+          "text": "🔧 ОСМОТРЕТЬ ИМПЛАНТ",
+          "delta": {
+            "logic": 1,
+            "trust": -1
+          },
+          "next": "c1_capsule_46_failure_inspect"
+        },
+        {
+          "text": "⏻ ОТКРЫТЬ КАПСУЛУ",
+          "delta": {
+            "control": 1,
+            "fear": -1
+          },
+          "next": "c1_capsule_46_failure_open"
+        }
+      ]
+    },
+    {
+      "id": "c1_capsule_46_failure_inspect",
+      "cycle": 1,
+      "image": "c1_capsule_46_failure.png",
+      "text": "Индикаторы импланта меняют цвет.\nСистема внезапно выдает ошибку. Стекло отвечает треском.",
+      "effects": [
+        "glitch_major",
+        "flash_subtle",
+        "blackout_micro"
+      ],
+      "audio": {
+        "sceneOnce": "scene_alarm_hit.mp3",
+        "sceneLoop": "scene_alarm_low.mp3"
+      },
+      "choices": [
+        {
+          "text": "ОСТАНОВИТЬ",
+          "delta": {
+            "control": 1,
+            "logic": 1
+          },
+          "next": "c1_capsule_46_eyes"
+        },
+        {
+          "text": "СМОТРЕТЬ",
+          "delta": {
+            "logic": 1,
+            "fear": -1
+          },
+          "next": "c1_capsule_46_eyes"
+        },
+        {
+          "text": "ОТСТУПИТЬ",
+          "delta": {
+            "fear": 1,
+            "trust": 1
+          },
+          "next": "c1_capsule_46_eyes"
+        }
+      ]
+    },
+    {
+      "id": "c1_capsule_46_failure_open",
+      "cycle": 1,
+      "image": "c1_capsule_46_failure.png",
+      "text": "Стекло отвечает треском.\nСистема мгновенно уходит в аварийный режим.",
+      "effects": [
+        "glitch_major",
+        "flash_subtle",
+        "blackout_micro"
+      ],
+      "audio": {
+        "sceneOnce": "scene_alarm_hit.mp3",
+        "sceneLoop": "scene_alarm_low.mp3"
+      },
+      "choices": [
+        {
+          "text": "ОСТАНОВИТЬ",
+          "delta": {
+            "control": 1,
+            "logic": 1
+          },
+          "next": "c1_capsule_46_eyes"
+        },
+        {
+          "text": "СМОТРЕТЬ",
+          "delta": {
+            "logic": 1,
+            "fear": -1
+          },
+          "next": "c1_capsule_46_eyes"
+        },
+        {
+          "text": "ОТСТУПИТЬ",
+          "delta": {
+            "fear": 1,
+            "trust": 1
+          },
+          "next": "c1_capsule_46_eyes"
+        }
+      ]
+    },
+    {
+      "id": "c1_capsule_46_eyes",
+      "cycle": 1,
+      "image": "c1_capsule_46_eyes.png",
+      "text": "Система больше не шумит.\nТеперь глаза внутри капсулы открыты.",
+      "effects": [
+        "blackout_short"
+      ],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_low_hum_dark.mp3"
+      },
+      "choices": [
+        {
+          "text": "НАЗАД",
+          "delta": {
+            "fear": 1
+          },
+          "next": "system_cycle_end"
+        },
+        {
+          "text": "СБРОС",
+          "delta": {
+            "trust": 1
+          },
+          "next": "system_cycle_end"
+        },
+        {
+          "text": "ЦИКЛ",
+          "delta": {
+            "logic": 1
+          },
+          "next": "system_cycle_end"
+        }
+      ]
+    },
+    {
+      "id": "c1_corridor_entry_return",
+      "cycle": 1,
+      "image": "c1_corridor_capsules_door.png",
+      "text": "Вентиляция гудит в темноте.\nСлева — ряды капсул. Впереди — дверь.",
+      "effects": [],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_corridor_amb.mp3"
+      },
+      "choices": [
+        {
+          "text": "🔍 КАПСУЛЫ",
+          "delta": {
+            "logic": 1,
+            "trust": -1
+          },
+          "next": "c1_capsule_46_fog"
+        },
+        {
+          "text": "🚪 ДВЕРЬ",
+          "delta": {
+            "fear": 1,
+            "control": 1
+          },
+          "next": "c1_door_placeholder_1"
+        }
+      ]
+    },
+    {
+      "id": "c1_door_placeholder_1",
+      "cycle": 1,
+      "image": "c1_door_placeholder.png",
+      "text": "Дверь ждёт подтверждения.\nЭта ветка ещё не завершена.",
+      "effects": [
+        "flash_subtle"
+      ],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_corridor_amb.mp3"
+      },
+      "choices": [
+        {
+          "text": "НАЗАД",
+          "delta": {},
+          "next": "c1_corridor_entry_return"
+        },
+        {
+          "text": "ПРОВЕРКА",
+          "delta": {
+            "logic": 1,
+            "trust": 1
+          },
+          "next": "c1_door_placeholder_2"
+        }
+      ]
+    },
+    {
+      "id": "c1_door_placeholder_2",
+      "cycle": 1,
+      "image": "c1_door_memory_check.png",
+      "text": "Система требует номер капсулы.\nПолная дверная ветка будет добавлена позже.",
+      "effects": [
+        "glitch_minor"
+      ],
+      "audio": {
+        "sceneOnce": "",
+        "sceneLoop": "scene_panel_hum.mp3"
+      },
+      "choices": [
+        {
+          "text": "47",
+          "delta": {
+            "logic": 1
+          },
+          "next": "system_cycle_end"
+        },
+        {
+          "text": "НАЗАД",
+          "delta": {},
+          "next": "c1_door_placeholder_1"
+        }
+      ]
+    },
+    {
+      "id": "c2_capsule_wake_v2",
+      "cycle": 2,
+      "image": "c2_capsule_glass_cracked.png",
+      "text": "Пробуждение приходит снова.\nЗа стеклом — уже знакомая тьма.",
+      "effects": [
+        "light_dim",
+        "glitch_minor"
+      ],
+      "audio": {
+        "sceneOnce": "scene_cryo_breath.mp3",
+        "sceneLoop": "scene_cryo.mp3"
+      },
+      "choices": [
+        {
+          "text": "⏻ ОТКРЫТЬ",
+          "delta": {
+            "control": 1
+          },
+          "next": "c1_corridor_entry_open"
+        },
+        {
+          "text": "⌁ ПАНЕЛЬ",
+          "delta": {
+            "logic": 1,
+            "trust": 1
+          },
+          "next": "c1_panel_boot"
+        }
+      ]
+    }
+  ]
+}
