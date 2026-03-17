@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CRYOTEST</title>
+  <link rel="stylesheet" href="./menu.css" />
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="pulse"></div>
+  <div class="grain"></div>
+  <div class="vignette"></div>
+
+  <div class="overlayFlash" id="flash"></div>
+
+  <div class="wrap">
+    <div class="hud">
+
+      <div class="title">CRYOTEST</div>
+      <div class="subtitle">Neurobehavioral Evaluation • Module 47-B</div>
+
+      <div class="statusrow">
+        <span>SUBJECT: 47</span>
+        <span>STATE: READY</span>
+      </div>
+
+      <div class="buttons">
+        <button class="btn" id="btnStart">Начать тест</button>
+        <button class="btn secondary" id="btnContinue" disabled>Продолжить (скоро)</button>
+      </div>
+
+      <div class="footer">
+        <div id="hint" class="hint">Музыка включается тумблером «Звук».</div>
+      </div>
+
+      <div class="version">v0.1</div>
+
+      <button class="soundToggle" id="btnSound" type="button" aria-label="Sound toggle">
+        <span class="dot" id="soundDot" aria-hidden="true"></span>
+        <span class="label" id="soundLabel">ЗВУК: ВЫКЛ</span>
+      </button>
+
+    </div>
+  </div>
+
+  <audio id="menuAudio" src="./assets/menu_ambient.mp3" loop preload="none"></audio>
+  <audio id="uiClick" src="./assets/ui_click.mp3" preload="auto"></audio>
+
+  <script>
+    /* BUILD_ID: CRYOTEST_INDEX_2026-02-25_01 */
+
+    const flash = document.getElementById("flash");
+    const btnStart = document.getElementById("btnStart");
+    const btnSound = document.getElementById("btnSound");
+
+    const hint = document.getElementById("hint");
+    const soundLabel = document.getElementById("soundLabel");
+
+    const menuAudio = document.getElementById("menuAudio");
+    const uiClick = document.getElementById("uiClick");
+
+    const SOUND_KEY = "cryotest_sound_on";
+    let soundEnabled = localStorage.getItem(SOUND_KEY) === "1";
+
+    function flashCold(ms=200){
+      flash.style.transitionDuration = ms + "ms";
+      flash.style.opacity = "1";
+    }
+    function flashOff(ms=240){
+      flash.style.transitionDuration = ms + "ms";
+      flash.style.opacity = "0";
+    }
+
+    function clickSfx(){
+      if (!soundEnabled) return;
+      try {
+        uiClick.currentTime = 0;
+        uiClick.volume = 0.22;
+        uiClick.play();
+      } catch(e){}
+    }
+
+    async function startMenuMusic(){
+      try {
+        menuAudio.volume = 0.18;
+        await menuAudio.play();
+      } catch(e){}
+    }
+
+    function stopMenuMusic(){
+      try { menuAudio.pause(); } catch(e){}
+    }
+
+    function applySoundUI(){
+      if (soundEnabled){
+        btnSound.classList.add("dim");
+        btnSound.classList.add("on");
+        soundLabel.textContent = "ЗВУК: ВКЛ";
+        hint.classList.add("hintOff");
+        hint.classList.remove("hintAttention");
+      } else {
+        btnSound.classList.remove("dim");
+        btnSound.classList.remove("on");
+        soundLabel.textContent = "ЗВУК: ВЫКЛ";
+        hint.classList.remove("hintOff");
+        hint.classList.add("hintAttention");
+      }
+    }
+
+    applySoundUI();
+    if (soundEnabled) startMenuMusic();
+
+    btnSound.addEventListener("click", async () => {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem(SOUND_KEY, soundEnabled ? "1" : "0");
+      applySoundUI();
+
+      if (soundEnabled){
+        await startMenuMusic();
+        clickSfx();
+      } else {
+        stopMenuMusic();
+      }
+    });
+
+    btnStart.addEventListener("click", async () => {
+      clickSfx();
+
+      // ставим флаг для плавного проявления в игре
+      try { sessionStorage.setItem("cryotest_transition", "1"); } catch(e) {}
+
+      // холодный fade
+      flashCold(180);
+
+      // сброс
+      try { await fetch("/api/reset", { method: "POST" }); } catch(e){}
+
+      setTimeout(() => {
+        window.location.href = "./game.html";
+      }, 220);
+    });
+
+    // на всякий: если вдруг вернулись назад и оверлей остался
+    flashOff(0);
+  </script>
+
+</body>
+</html>
