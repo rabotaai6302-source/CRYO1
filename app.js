@@ -1,6 +1,10 @@
-/* BUILD_ID: CRYOTEST_APP_JS_STATIC_2026-03-17_FIX02 */
+/* BUILD_ID: CRYOTEST_APP_JS_STATIC_2026-03-17_FIX03 */
 
-const SCENES_URL = "./CRYOTEST/backend/scenes.json";
+const SCENES_CANDIDATES = [
+  "./CRYOTEST/backend/scenes.json",
+  "./backend/scenes.json",
+  "./scenes.json",
+];
 
 // ===== DOM (UI stage layout) =====
 const sceneTextWrap = document.getElementById("sceneTextWrap");
@@ -28,7 +32,7 @@ const soundBtnFallback = document.getElementById("soundBtnFallback");
 const overlayEl = document.getElementById("overlay");
 const buildEl = document.getElementById("buildId");
 
-if (buildEl) buildEl.textContent = "BUILD_ID: CRYOTEST_APP_JS_STATIC_2026-03-17_FIX02";
+if (buildEl) buildEl.textContent = "BUILD_ID: CRYOTEST_APP_JS_STATIC_2026-03-17_FIX03";
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
@@ -223,10 +227,24 @@ let engine = null;
 
 async function initEngine() {
   if (engine) return;
-  const r = await fetch(SCENES_URL, { cache: "no-store" });
-  if (!r.ok) throw new Error(`Failed to load scenes: ${r.status}`);
-  const data = await r.json();
-  engine = new Engine(new SceneStore(data));
+
+  let lastError = "unknown";
+  for (const url of SCENES_CANDIDATES) {
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) {
+        lastError = `${url}: ${r.status}`;
+        continue;
+      }
+      const data = await r.json();
+      engine = new Engine(new SceneStore(data));
+      return;
+    } catch (e) {
+      lastError = `${url}: ${e?.message || e}`;
+    }
+  }
+
+  throw new Error(`Failed to load scenes.json (${lastError})`);
 }
 
 function safeShow(el, display="block"){
